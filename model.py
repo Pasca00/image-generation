@@ -68,7 +68,9 @@ class Discriminator(nn.Module):
             nn.Flatten(),
             nn.Linear(32 * 16 * 16, 8192),
             nn.ReLU(inplace=True),
-            nn.Linear(8192, 1),
+            nn.Linear(8192, 4096),
+            nn.ReLU(inplace=True),
+            nn.Linear(4096, 1),
             nn.Sigmoid()
         )
 

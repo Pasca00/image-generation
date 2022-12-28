@@ -23,10 +23,11 @@ if __name__ == '__main__':
     parser.add_argument("--num_workers", type=int, default=1, help="number of cpu threads")
     parser.add_argument("--n_epochs", type=int, default=100, help="number of epochs of training")
     parser.add_argument("--batch_size", type=int, default=32, help="size of the batches")
-    parser.add_argument("--lr", type=float, default=0.0001, help="adam: learning rate")
+    parser.add_argument("--lr", type=float, default=0.0002, help="adam: learning rate")
     parser.add_argument("--b1", type=float, default=0.5, help="adam: decay of first order momentum of gradient")
     parser.add_argument("--b2", type=float, default=0.999, help="adam: decay of first order momentum of gradient")
     parser.add_argument("--latent_dim", type=int, default=100, help="dimensionality of the latent space")
+    parser.add_argument("--k", type=int, default=1, help="number of times discrimator is trained before the generator is trained once")
     opt = parser.parse_args()
 
     transorm = transforms.Compose([
@@ -51,8 +52,6 @@ if __name__ == '__main__':
         for idx, (z, real_images) in enumerate(dataloader):
             real_labels = Variable(torch.ones(real_images.size(0), 1))
             fake_labels = Variable(torch.zeros(real_images.size(0), 1))
-            
-            gan.G.zero_grad()
 
             z, real_images = Variable(z), Variable(real_images)
 
@@ -61,14 +60,10 @@ if __name__ == '__main__':
                 real_images = real_images.cuda()
                 real_labels = real_labels.cuda()
                 fake_labels = fake_labels.cuda()
-
+            
             fake_images = gan.generate_fakes(z)
-            predictions_fake = gan.classify_images(fake_images)
 
-            gen_loss = gan.compute_loss(predictions_fake, real_labels)
-            gen_loss.backward()
-            gan.optimizer_G.step()
-
+            # Train Discriminator
             gan.D.zero_grad()
             predictions_real = gan.classify_images(real_images)
             disc_real_loss = gan.compute_loss(predictions_real, real_labels)
@@ -81,6 +76,16 @@ if __name__ == '__main__':
 
             disc_loss.backward()
             gan.optimizer_D.step()
+
+            # Train Generator
+            gan.G.zero_grad()
+
+            # fake_images = gan.generate_fakes(z)
+            predictions_fake = gan.classify_images(fake_images)
+
+            gen_loss = gan.compute_loss(predictions_fake, real_labels)
+            gen_loss.backward()
+            gan.optimizer_G.step()
 
             if (idx % 100 == 0 and idx != 0):
                 print('Epoch: %d/%d, batch: %d/%d - loss D: %.3f, loss G: %.3f'
