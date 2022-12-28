@@ -32,15 +32,18 @@ class Generator(nn.Module):
         super(Generator, self).__init__()
 
         self.model = nn.Sequential(
-            nn.ConvTranspose2d(in_channels=n_latent, out_channels=1024, kernel_size=8, stride=1),
-            nn.BatchNorm2d(1024),
+            nn.Flatten(),
+            nn.Linear(in_features=n_latent, out_features=1024 * 4 * 4),
+            nn.BatchNorm1d(1024 * 4 * 4),
             nn.ReLU(inplace=True),
+            nn.Unflatten(dim=1, unflattened_size=(1024, 4, 4)),
             GeneratorBlock(1024, 512),
             GeneratorBlock(512, 256),
             GeneratorBlock(256, 128),
             GeneratorBlock(128, 64),
+            GeneratorBlock(64, 32),
 
-            nn.ConvTranspose2d(in_channels=64, out_channels=3, kernel_size=2, stride=2),
+            nn.ConvTranspose2d(in_channels=32, out_channels=3, kernel_size=2, stride=2),
             nn.Sigmoid()
         )
 
