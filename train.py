@@ -1,16 +1,24 @@
 import numpy as np
+import torch
 import torch.utils.data as data
 from torch.autograd import Variable
-from torchvision import datasets, transforms
+from torchvision import transforms
+from torchvision.utils import save_image
 import argparse
 import model
 from data_loader import CustomDataset
-from matplotlib.pyplot import imshow, show
+from matplotlib.pyplot import imshow, show, imsave
 import os
 
 if __name__ == '__main__':
     if not os.path.exists("./images/"):
         os.makedirs("./images/")
+    
+    if not os.path.exists("./saved/"):
+        os.makedirs("./saved/")
+
+    if not os.path.exists("./output/"):
+        os.makedirs("./output/")
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--num_workers", type=int, default=1, help="number of cpu threads")
@@ -36,17 +44,57 @@ if __name__ == '__main__':
 
     gan = model.GAN()
 
-    for _ in range(opt.n_epochs):
-        for idx, (z, images) in enumerate(dataloader):
-            # Torch not compiled with CUDA enabled
-            z, images = Variable(z), Variable(images)
+    real_label = 1
+    fake_label = 0
+
+    generated_images = []
+
+    save_out = './output/'
+
+    for curr_epoch in range(opt.n_epochs):
+        for idx, (z, real_images) in enumerate(dataloader):
+            real_labels = Variable(torch.ones(real_images.size(0), 1))
+            fake_labels = Variable(torch.zeros(real_images.size(0), 1))
+            
+            gan.G.zero_grad()
+
+            z, real_images = Variable(z), Variable(real_images)
 
             if gan.cuda_available:
                 z = z.cuda()
-                images = images.cuda()
+                real_images = real_images.cuda()
+                real_labels = real_labels.cuda()
+                fake_labels = fake_labels.cuda()
 
             fake_images = gan.generate_fakes(z)
+            predictions_fake = gan.classify_images(fake_images)
 
+            gen_loss = gan.compute_loss(predictions_fake, real_labels)
+            gen_loss.backward()
+            gan.optimizer_G.step()
+
+            gan.D.zero_grad()
+            predictions_real = gan.classify_images(real_images)
+            disc_real_loss = gan.compute_loss(predictions_real, real_labels)
+
+            predictions_fake = gan.classify_images(fake_images.detach())
+
+            disc_fake_loss = gan.compute_loss(predictions_fake, fake_labels)
+
+            disc_loss = (disc_real_loss + disc_fake_loss) / 2
+
+            disc_loss.backward()
+            gan.optimizer_D.step()
+
+            if (idx % 50 == 0 and idx != 0):
+                print('Epoch: %d/%d, batch: %d/%d - loss D: %.3f, loss G: %.3f'
+                    % (curr_epoch + 1, opt.n_epochs, idx, len(dataloader), 
+                    disc_loss.item(), gen_loss.item()))
+
+                image_name = os.path.join(save_out, 'e_{}_b_{}.jpg'.format(curr_epoch, idx))
+                save_image(fake_images.detach().cpu(), image_name)
+
+    gan.save()
             
 
 

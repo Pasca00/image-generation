@@ -23,6 +23,9 @@ class DiscriminatorBlock(nn.Module):
             nn.MaxPool2d(kernel_size=2, stride=2),
             nn.LeakyReLU(0.2, inplace=True),
         )
+    
+    def forward(self, x):
+        return self.model(x)
 
 class Generator(nn.Module):
     def __init__(self, n_latent) -> None:
@@ -39,7 +42,7 @@ class Generator(nn.Module):
             GeneratorBlock(128, 64),
             GeneratorBlock(64, 32),
 
-            nn.ConvTranspose2d(in_channels=32, out_channels=16, kernel_size=2, stride=2),
+            nn.ConvTranspose2d(in_channels=32, out_channels=3, kernel_size=2, stride=2),
             nn.Sigmoid()
         )
 
@@ -55,6 +58,7 @@ class Discriminator(nn.Module):
             DiscriminatorBlock(256, 128),
             DiscriminatorBlock(128, 64),
             DiscriminatorBlock(64, 32),
+            nn.Flatten(),
             nn.Linear(32 * 16 * 16, 1),
             nn.Sigmoid()
         )
@@ -62,10 +66,8 @@ class Discriminator(nn.Module):
     def forward(self, x):
         return self.model(x)
 
-class GAN(nn.Module):
+class GAN():
     def __init__(self, n_latent=100, lr_gen=0.0002, lr_disc=0.001, beta_gen=(0.5, 0.999), beta_disc=(0.5, 0.999)) -> None:
-        super(GAN, self).__init__()
-
         self.cuda_available = torch.cuda.is_available()
 
         self.G = Generator(n_latent=n_latent)
@@ -84,8 +86,14 @@ class GAN(nn.Module):
     def generate_fakes(self, z):
         return self.G(z)
     
-    def save(self, path='./state'):
+    def save(self, path='./saved/save'):
         torch.save(self.G.state_dict(), path)
 
     def load(self, path='./state'):
         self.G.load_state_dict(torch.load(path))
+    
+    def classify_images(self, images):
+        return self.D(images)
+    
+    def compute_loss(self, predictions, labels):
+        return self.criterion(predictions, labels)
