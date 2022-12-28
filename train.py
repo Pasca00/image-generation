@@ -7,7 +7,6 @@ from torchvision.utils import save_image
 import argparse
 import model
 from data_loader import CustomDataset
-from matplotlib.pyplot import imshow, show, imsave
 import os
 
 if __name__ == '__main__':
@@ -38,9 +37,6 @@ if __name__ == '__main__':
     dataloader = data.DataLoader(dataset, batch_size=opt.batch_size, shuffle=True, num_workers=opt.num_workers)
 
     z, image = next(iter(dataloader))
-
-    # imshow(image[0].permute(1, 2, 0))
-    # show()
 
     gan = model.GAN()
 
@@ -86,7 +82,7 @@ if __name__ == '__main__':
             disc_loss.backward()
             gan.optimizer_D.step()
 
-            if (idx % 50 == 0 and idx != 0):
+            if (idx % 100 == 0 and idx != 0):
                 print('Epoch: %d/%d, batch: %d/%d - loss D: %.3f, loss G: %.3f'
                     % (curr_epoch + 1, opt.n_epochs, idx, len(dataloader), 
                     disc_loss.item(), gen_loss.item()))
