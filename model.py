@@ -27,22 +27,29 @@ class DiscriminatorBlock(nn.Module):
     def forward(self, x):
         return self.model(x)
 
+class Reshape(nn.Module):
+    def __init__(self, shape) -> None:
+        super(Reshape, self).__init__()
+
+        self.shape = shape
+         
+    def forward(self, x):
+        return x.view(self.shape)
+
 class Generator(nn.Module):
     def __init__(self, n_latent) -> None:
         super(Generator, self).__init__()
 
         self.model = nn.Sequential(
-            nn.ConvTranspose2d(in_channels=n_latent, out_channels=1024, kernel_size=4, stride=1),
+            nn.ConvTranspose2d(in_channels=n_latent, out_channels=1024, kernel_size=8, stride=1),
             nn.BatchNorm2d(1024),
             nn.ReLU(inplace=True),
-
             GeneratorBlock(1024, 512),
             GeneratorBlock(512, 256),
             GeneratorBlock(256, 128),
             GeneratorBlock(128, 64),
-            GeneratorBlock(64, 32),
 
-            nn.ConvTranspose2d(in_channels=32, out_channels=3, kernel_size=2, stride=2),
+            nn.ConvTranspose2d(in_channels=64, out_channels=3, kernel_size=2, stride=2),
             nn.Sigmoid()
         )
 
@@ -59,7 +66,9 @@ class Discriminator(nn.Module):
             DiscriminatorBlock(128, 64),
             DiscriminatorBlock(64, 32),
             nn.Flatten(),
-            nn.Linear(32 * 16 * 16, 1),
+            nn.Linear(32 * 16 * 16, 8192),
+            nn.ReLU(inplace=True),
+            nn.Linear(8192, 1),
             nn.Sigmoid()
         )
 

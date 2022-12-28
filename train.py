@@ -23,7 +23,7 @@ if __name__ == '__main__':
     parser.add_argument("--num_workers", type=int, default=1, help="number of cpu threads")
     parser.add_argument("--n_epochs", type=int, default=100, help="number of epochs of training")
     parser.add_argument("--batch_size", type=int, default=32, help="size of the batches")
-    parser.add_argument("--lr", type=float, default=0.0002, help="adam: learning rate")
+    parser.add_argument("--lr", type=float, default=0.0001, help="adam: learning rate")
     parser.add_argument("--b1", type=float, default=0.5, help="adam: decay of first order momentum of gradient")
     parser.add_argument("--b2", type=float, default=0.999, help="adam: decay of first order momentum of gradient")
     parser.add_argument("--latent_dim", type=int, default=100, help="dimensionality of the latent space")
@@ -77,7 +77,7 @@ if __name__ == '__main__':
 
             disc_fake_loss = gan.compute_loss(predictions_fake, fake_labels)
 
-            disc_loss = (disc_real_loss + disc_fake_loss) / 2
+            disc_loss = (disc_real_loss + disc_fake_loss)
 
             disc_loss.backward()
             gan.optimizer_D.step()
