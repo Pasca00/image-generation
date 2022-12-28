@@ -15,26 +15,17 @@ class GeneratorBlock(nn.Module):
         return self.model(x)
 
 class DiscriminatorBlock(nn.Module):
-    def __init__(self, in_ch, out_ch) -> None:
+    def __init__(self, in_ch, out_ch, down_sampling = 2) -> None:
         super(DiscriminatorBlock, self).__init__()
 
         self.model = nn.Sequential(
             nn.Conv2d(in_channels=in_ch, out_channels=out_ch, kernel_size=3, padding='same'),
-            nn.MaxPool2d(kernel_size=2, stride=2),
+            nn.MaxPool2d(kernel_size=down_sampling, stride=down_sampling),
             nn.LeakyReLU(0.2, inplace=True),
         )
     
     def forward(self, x):
         return self.model(x)
-
-class Reshape(nn.Module):
-    def __init__(self, shape) -> None:
-        super(Reshape, self).__init__()
-
-        self.shape = shape
-         
-    def forward(self, x):
-        return x.view(self.shape)
 
 class Generator(nn.Module):
     def __init__(self, n_latent) -> None:
@@ -61,16 +52,11 @@ class Discriminator(nn.Module):
         super(Discriminator, self).__init__()
 
         self.model = nn.Sequential(
-            DiscriminatorBlock(3, 256),
-            DiscriminatorBlock(256, 128),
+            DiscriminatorBlock(3, 128, down_sampling=4),
             DiscriminatorBlock(128, 64),
             DiscriminatorBlock(64, 32),
             nn.Flatten(),
-            nn.Linear(32 * 16 * 16, 8192),
-            nn.ReLU(inplace=True),
-            nn.Linear(8192, 4096),
-            nn.ReLU(inplace=True),
-            nn.Linear(4096, 1),
+            nn.Linear(32 * 16 * 16, 1),
             nn.Sigmoid()
         )
 
