@@ -34,7 +34,7 @@ if __name__ == '__main__':
         transforms.Resize((256, 256)),
         transforms.ToTensor()
     ])
-    dataset = CustomDataset('./images/', transform=transorm)
+    dataset = CustomDataset('./images/', transform=transorm, n_latent=opt.latent_dim)
     dataloader = data.DataLoader(dataset, batch_size=opt.batch_size, shuffle=True, num_workers=opt.num_workers)
 
     z, image = next(iter(dataloader))
@@ -43,8 +43,6 @@ if __name__ == '__main__':
 
     real_label = 1
     fake_label = 0
-
-    generated_images = []
 
     save_out = './output/'
 

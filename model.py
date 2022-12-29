@@ -55,11 +55,11 @@ class Discriminator(nn.Module):
         super(Discriminator, self).__init__()
 
         self.model = nn.Sequential(
-            DiscriminatorBlock(3, 128, down_sampling=4),
-            DiscriminatorBlock(128, 64),
+            DiscriminatorBlock(3, 64, down_sampling=4),
             DiscriminatorBlock(64, 32),
+            DiscriminatorBlock(32, 16),
             nn.Flatten(),
-            nn.Linear(32 * 16 * 16, 1),
+            nn.Linear(16 * 16 * 16, 1),
             nn.Sigmoid()
         )
 
