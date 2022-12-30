@@ -1,7 +1,6 @@
 import numpy as np
 import torch
 import torch.utils.data as data
-from torch.autograd import Variable
 from torchvision import transforms
 from torchvision.utils import save_image
 import argparse
@@ -51,10 +50,8 @@ if __name__ == '__main__':
 
     for curr_epoch in range(opt.n_epochs):
         for idx, (z, real_images) in enumerate(dataloader):
-            real_labels = Variable(torch.ones(real_images.size(0), 1))
-            fake_labels = Variable(torch.zeros(real_images.size(0), 1))
-
-            z, real_images = Variable(z), Variable(real_images)
+            real_labels = torch.ones(real_images.size(0), 1)
+            fake_labels = torch.zeros(real_images.size(0), 1)
 
             if gan.cuda_available:
                 z = z.cuda()
