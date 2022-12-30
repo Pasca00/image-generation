@@ -30,9 +30,11 @@ if __name__ == '__main__':
     parser.add_argument("--k", type=int, default=1, help="number of times discrimator is trained before the generator is trained once")
     opt = parser.parse_args()
 
+    denormalize = transforms.Normalize((-1, -1, -1), (2, 2, 2))
     transorm = transforms.Compose([
         transforms.Resize((256, 256)),
-        transforms.ToTensor()
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ])
     dataset = CustomDataset('./images/', transform=transorm, n_latent=opt.latent_dim)
     dataloader = data.DataLoader(dataset, batch_size=opt.batch_size, shuffle=True, num_workers=opt.num_workers)
@@ -91,7 +93,7 @@ if __name__ == '__main__':
                     disc_loss.item(), gen_loss.item()))
 
                 image_name = os.path.join(save_out, 'e_{}_b_{}.jpg'.format(curr_epoch, idx))
-                save_image(fake_images.detach().cpu(), image_name)
+                save_image(denormalize(fake_images.detach().cpu()), image_name)
 
     gan.save()
             

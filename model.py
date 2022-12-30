@@ -44,7 +44,7 @@ class Generator(nn.Module):
             GeneratorBlock(64, 32),
 
             nn.ConvTranspose2d(in_channels=32, out_channels=3, kernel_size=2, stride=2),
-            nn.Sigmoid()
+            nn.Tanh()
         )
 
     def forward(self, x):
@@ -55,11 +55,11 @@ class Discriminator(nn.Module):
         super(Discriminator, self).__init__()
 
         self.model = nn.Sequential(
-            DiscriminatorBlock(3, 64, down_sampling=4),
-            DiscriminatorBlock(64, 32),
+            DiscriminatorBlock(3, 32, down_sampling=4),
             DiscriminatorBlock(32, 16),
+            DiscriminatorBlock(16, 8),
             nn.Flatten(),
-            nn.Linear(16 * 16 * 16, 1),
+            nn.Linear(8 * 16 * 16, 1),
             nn.Sigmoid()
         )
 
