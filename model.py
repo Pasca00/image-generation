@@ -30,6 +30,7 @@ class DiscriminatorBlock(nn.Module):
             nn.Conv2d(in_channels=in_ch, out_channels=out_ch, kernel_size=down_sampling, stride=down_sampling, bias=False),
             nn.BatchNorm2d(out_ch),
             nn.LeakyReLU(0.2, inplace=True),
+            nn.Dropout2d(p=0.2),
         )
     
     def forward(self, x):
@@ -60,11 +61,11 @@ class Discriminator(nn.Module):
         super(Discriminator, self).__init__()
 
         self.model = nn.Sequential(
-            DiscriminatorBlock(3, 64, down_sampling=8),
-            DiscriminatorBlock(64, 128),
+            DiscriminatorBlock(3, 128, down_sampling=8),
             DiscriminatorBlock(128, 256),
             DiscriminatorBlock(256, 512),
-            nn.Conv2d(512, 1, kernel_size=4, bias=False),
+            DiscriminatorBlock(512, 1024),
+            nn.Conv2d(1024, 1, kernel_size=4, bias=False),
             nn.Flatten(),
             nn.Sigmoid()
         )
