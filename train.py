@@ -7,6 +7,7 @@ import argparse
 import model
 from data_loader import CustomDataset
 import os
+import matplotlib.pyplot as plt
 
 if __name__ == '__main__':
     if not os.path.exists("./images/"):
@@ -48,6 +49,9 @@ if __name__ == '__main__':
 
     save_out = './output/'
 
+    g_losses = []
+    d_losses = []
+
     for curr_epoch in range(opt.n_epochs):
         for idx, (z, real_images) in enumerate(dataloader):
             real_labels = torch.ones(real_images.size(0), 1)
@@ -59,20 +63,22 @@ if __name__ == '__main__':
                 real_labels = real_labels.cuda()
                 fake_labels = fake_labels.cuda()
             
-            fake_images = gan.generate_fakes(z)
-
             # Train Discriminator
             gan.D.zero_grad()
+            fake_images = gan.generate_fakes(z)
+
             predictions_real = gan.classify_images(real_images)
             disc_real_loss = gan.compute_loss(predictions_real, real_labels)
+            disc_real_loss.backward()
 
             predictions_fake = gan.classify_images(fake_images.detach())
 
             disc_fake_loss = gan.compute_loss(predictions_fake, fake_labels)
+            disc_fake_loss.backward()
 
             disc_loss = (disc_real_loss + disc_fake_loss)
 
-            disc_loss.backward()
+            # disc_loss.backward()
             gan.optimizer_D.step()
 
             # Train Generator
@@ -92,6 +98,18 @@ if __name__ == '__main__':
 
                 image_name = os.path.join(save_out, 'e_{}_b_{}.jpg'.format(curr_epoch, idx))
                 save_image(denormalize(fake_images.detach().cpu()), image_name)
+
+            g_losses.append(gen_loss.detach().cpu())
+            d_losses.append(disc_loss.detach().cpu())
+
+    plt.figure(figsize=(10,5))
+    plt.title("Generator and Discriminator Loss During Training")
+    plt.plot(g_losses,label="G")
+    plt.plot(d_losses,label="D")
+    plt.xlabel("iterations")
+    plt.ylabel("Loss")
+    plt.legend()
+    plt.show()
 
     gan.save()
             

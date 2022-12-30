@@ -19,7 +19,7 @@ class DiscriminatorBlock(nn.Module):
         super(DiscriminatorBlock, self).__init__()
 
         self.model = nn.Sequential(
-            nn.Conv2d(in_channels=in_ch, out_channels=out_ch, kernel_size=down_sampling, stride=down_sampling),
+            nn.Conv2d(in_channels=in_ch, out_channels=out_ch, kernel_size=down_sampling, stride=down_sampling, bias=False),
             nn.BatchNorm2d(out_ch),
             nn.LeakyReLU(0.2, inplace=True),
         )
@@ -56,8 +56,7 @@ class Discriminator(nn.Module):
             DiscriminatorBlock(64, 128),
             DiscriminatorBlock(128, 256),
             DiscriminatorBlock(256, 512),
-            DiscriminatorBlock(512, 256),
-            nn.Conv2d(256, 1, kernel_size=2),
+            nn.Conv2d(512, 1, kernel_size=4, bias=False),
             nn.Flatten(),
             nn.Sigmoid()
         )
