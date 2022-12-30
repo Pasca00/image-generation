@@ -1,6 +1,14 @@
 import torch
 import torch.nn as nn
 
+def weights_init(m):
+    classname = m.__class__.__name__
+    if classname.find('Conv') != -1:
+        nn.init.normal_(m.weight.data, 0.0, 0.02)
+    elif classname.find('BatchNorm') != -1:
+        nn.init.normal_(m.weight.data, 1.0, 0.02)
+        nn.init.constant_(m.bias.data, 0)
+
 class GeneratorBlock(nn.Module):
     def __init__(self, in_ch, out_ch) -> None:
         super(GeneratorBlock, self).__init__()
@@ -76,6 +84,9 @@ class GAN():
             self.G = self.G.cuda()
             self.D = self.D.cuda()
             self.criterion = self.criterion.cuda()
+
+        # self.G.apply(weights_init)
+        # self.D.apply(weights_init)
 
         self.optimizer_G = torch.optim.Adam(self.G.parameters(), lr=lr_gen, betas=beta_gen)
         self.optimizer_D = torch.optim.Adam(self.D.parameters(), lr=lr_disc, betas=beta_disc)
