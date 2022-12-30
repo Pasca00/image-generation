@@ -19,8 +19,8 @@ class DiscriminatorBlock(nn.Module):
         super(DiscriminatorBlock, self).__init__()
 
         self.model = nn.Sequential(
-            nn.Conv2d(in_channels=in_ch, out_channels=out_ch, kernel_size=3, padding='same'),
-            nn.MaxPool2d(kernel_size=down_sampling, stride=down_sampling),
+            nn.Conv2d(in_channels=in_ch, out_channels=out_ch, kernel_size=down_sampling, stride=down_sampling),
+            nn.BatchNorm2d(out_ch),
             nn.LeakyReLU(0.2, inplace=True),
         )
     
@@ -32,18 +32,15 @@ class Generator(nn.Module):
         super(Generator, self).__init__()
 
         self.model = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(in_features=n_latent, out_features=1024 * 4 * 4),
-            nn.BatchNorm1d(1024 * 4 * 4),
-            nn.ReLU(inplace=True),
-            nn.Unflatten(dim=1, unflattened_size=(1024, 4, 4)),
+            GeneratorBlock(n_latent, 1024),
             GeneratorBlock(1024, 512),
             GeneratorBlock(512, 256),
             GeneratorBlock(256, 128),
             GeneratorBlock(128, 64),
             GeneratorBlock(64, 32),
+            GeneratorBlock(32, 16),
 
-            nn.ConvTranspose2d(in_channels=32, out_channels=3, kernel_size=2, stride=2),
+            nn.ConvTranspose2d(in_channels=16, out_channels=3, kernel_size=2, stride=2),
             nn.Tanh()
         )
 
@@ -55,11 +52,13 @@ class Discriminator(nn.Module):
         super(Discriminator, self).__init__()
 
         self.model = nn.Sequential(
-            DiscriminatorBlock(3, 32, down_sampling=4),
-            DiscriminatorBlock(32, 16),
-            DiscriminatorBlock(16, 8),
+            DiscriminatorBlock(3, 64, down_sampling=8),
+            DiscriminatorBlock(64, 128),
+            DiscriminatorBlock(128, 256),
+            DiscriminatorBlock(256, 512),
+            DiscriminatorBlock(512, 256),
+            nn.Conv2d(256, 1, kernel_size=2),
             nn.Flatten(),
-            nn.Linear(8 * 16 * 16, 1),
             nn.Sigmoid()
         )
 
@@ -72,13 +71,12 @@ class GAN():
 
         self.G = Generator(n_latent=n_latent)
         self.D = Discriminator()
-
         self.criterion = nn.BCELoss()
 
         if self.cuda_available:
-            self.G.cuda()
-            self.D.cuda()
-            self.criterion.cuda()
+            self.G = self.G.cuda()
+            self.D = self.D.cuda()
+            self.criterion = self.criterion.cuda()
 
         self.optimizer_G = torch.optim.Adam(self.G.parameters(), lr=lr_gen, betas=beta_gen)
         self.optimizer_D = torch.optim.Adam(self.D.parameters(), lr=lr_disc, betas=beta_disc)

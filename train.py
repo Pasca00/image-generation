@@ -34,6 +34,7 @@ if __name__ == '__main__':
     transorm = transforms.Compose([
         transforms.Resize((256, 256)),
         transforms.ToTensor(),
+        transforms.RandomHorizontalFlip(p=0.25),
         transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
     ])
     dataset = CustomDataset('./images/', transform=transorm, n_latent=opt.latent_dim)
